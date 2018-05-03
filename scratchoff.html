@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        canvas{
+            border: 1px solid red;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas" width="400" height="500"></canvas>
+<script>
+    //获取canvas，上下文
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    //鼠标坐标
+    var x,y;
+    var img = new Image();
+    img.src = 'img/xw.jpg';
+    //保证img加载完后进行图片绘制
+    img.onload = function(){
+        ctx.drawImage(img,0,0,500,707,0,0,400,500);
+
+        //灰色遮罩层
+        ctx.beginPath();
+        ctx.fillStyle = 'grey';
+        ctx.fillRect(0,0,400,500);
+        ctx.closePath();
+        var piex = ctx.getImageData(0,0,canvas.width,canvas.height);
+        var val1 = piex.data;
+
+
+        //获取偏移位置
+        function getOffset(ele,dir) {
+            dir = dir.replace(/[a-z]/,function(s){
+                return s.toLocaleUpperCase();
+            });
+            var offset = ele['offset' + dir];
+            var obj = ele;
+            while (obj.offsetParent) {
+                obj = obj.offsetParent;
+                offset += obj['offset' + dir] + obj['client' + dir];
+            }
+            return offset;
+        }
+
+
+        canvas.onmousemove = function (e) {
+            e = e || window.event;
+            x = e.clientX - getOffset(this,'left');
+            y = e.clientY - getOffset(this,'top');
+            ctx.globalCompositeOperation = 'destination-out';
+
+            ctx.beginPath();
+            ctx.arc(x,y,40,0,360);
+            ctx.fillStyle = 'yellow';
+            ctx.fill();
+            ctx.closePath();
+
+            var piex1 = ctx.getImageData(0,0,canvas.width,canvas.height);
+            var val2 = piex1.data;
+            var count = 0;
+
+            //当擦除区大于60%，遮罩层消失
+            for(var i = 0;i < val2.length;i+=4){
+                if(val2[i] === 128&&val2[i+1] === 128&&val2[i+2] === 128){
+                    count++;
+                }
+            }
+            if(count <= (val1.length)/4 * 0.4){
+                ctx.drawImage(img,0,0);
+            }
+                ctx.globalCompositeOperation = 'destination-atop';
+                ctx.drawImage(img, 0, 0);
+
+
+        };
+
+
+    };
+
+
+
+
+
+</script>
+</body>
+</html>
